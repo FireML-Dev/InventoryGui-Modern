@@ -22,6 +22,7 @@ package de.themoep.inventorygui;
  * SOFTWARE.
  */
 
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.ItemStack;
 
@@ -44,7 +45,7 @@ public class GuiPageElement extends StaticGuiElement {
      *                      a single space if you want to add an empty line!<br>
      *                      If it's not set/empty the item's default name will be used
      */
-    public GuiPageElement(char slotChar, ItemStack item, PageAction pageAction, String... text) {
+    public GuiPageElement(char slotChar, ItemStack item, PageAction pageAction, Component... text) {
         super(slotChar, item, text);
         setAction(click -> {
             switch (pageAction) {

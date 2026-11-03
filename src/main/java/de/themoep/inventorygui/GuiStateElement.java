@@ -22,6 +22,7 @@ package de.themoep.inventorygui;
  * SOFTWARE.
  */
 
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.ItemStack;
 
@@ -256,7 +257,7 @@ public class GuiStateElement extends GuiElement {
         private final Change change;
         private final String key;
         private final ItemStack item;
-        private String[] text;
+        private Component[] text;
         private InventoryGui gui;
 
         /**
@@ -270,7 +271,7 @@ public class GuiStateElement extends GuiElement {
          *                  a single space if you want to add an empty line!<br>
          *                  If it's not set/empty the item's default name will be used
          */
-        public State(Change change, String key, ItemStack item, String... text) {
+        public State(Change change, String key, ItemStack item, Component... text) {
             this.change = change;
             this.key = key;
             this.item = item;
@@ -285,18 +286,8 @@ public class GuiStateElement extends GuiElement {
          *              a single space if you want to add an empty line!<br>
          *              If it's not set/empty the item's default name will be used
          */
-        public void setText(String... text) {
+        public void setText(Component... text) {
             this.text = text;
-        }
-
-        /**
-         * Get the {@link ItemStack} that represents this state.
-         * @return The {@link ItemStack} that represents this state
-         * @deprecated Use {@link #getItem(HumanEntity)}
-         */
-        @Deprecated
-        public ItemStack getItem() {
-            return getItem(null);
         }
 
         /**
@@ -322,7 +313,7 @@ public class GuiStateElement extends GuiElement {
          * Get the text lines that describe this state.
          * @return The text lines for this state
          */
-        public String[] getText() {
+        public Component[] getText() {
             return text;
         }
 

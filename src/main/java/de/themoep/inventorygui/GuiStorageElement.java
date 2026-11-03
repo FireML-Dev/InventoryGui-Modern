@@ -22,8 +22,9 @@ package de.themoep.inventorygui;
  * SOFTWARE.
  */
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.inventory.ClickType;
@@ -259,7 +260,12 @@ public class GuiStorageElement extends GuiElement {
                     gui.simulateCollectToCursor(click);
                     return false;
                 default:
-                    click.getRawEvent().getWhoClicked().sendMessage(ChatColor.RED + "The action " + event.getAction() + " is not supported! Sorry about that :(");
+                    click.getRawEvent().getWhoClicked().sendMessage(
+                        Component.text(
+                            "The action " + event.getAction() + " is not supported! Sorry about that :(",
+                            NamedTextColor.RED
+                        )
+                    );
                     return true;
             }
             return !setStorageItem(click.getWhoClicked(), click.getSlot(), movedItem);
@@ -300,17 +306,6 @@ public class GuiStorageElement extends GuiElement {
 
     /**
      * Get the item in the storage that corresponds to the InventoryGui slot
-     * @param slot      The slot in the GUI
-     * @return      The {@link ItemStack} or <code>null</code> if the slot is outside of the item's size
-     * @deprecated Use {@link #getStorageItem(HumanEntity, int)}
-     */
-    @Deprecated
-    public ItemStack getStorageItem(int slot) {
-        return getStorageItem(null, slot);
-    }
-
-    /**
-     * Get the item in the storage that corresponds to the InventoryGui slot
      * @param player    The player which is using the GUI view
      * @param slot      The slot in the GUI
      * @return      The {@link ItemStack} or <code>null</code> if the slot is outside of the item's size
@@ -321,18 +316,6 @@ public class GuiStorageElement extends GuiElement {
             return storage.getItem(index);
         }
         return null;
-    }
-
-    /**
-     * Set the item in the storage that corresponds to the InventoryGui slot.
-     * @param slot  The slot in the GUI
-     * @param item  The {@link ItemStack} to set
-     * @return      <code>true</code> if the item was set; <code>false</code> if the slot was outside of this storage
-     * @deprecated Use {@link #setStorageItem(HumanEntity, int, ItemStack)}
-     */
-    @Deprecated
-    public boolean setStorageItem(int slot, ItemStack item) {
-        return setStorageItem(null, slot, item);
     }
 
     /**
@@ -376,16 +359,6 @@ public class GuiStorageElement extends GuiElement {
 
     /**
      * Get the item place validator
-     * @return The item place validator
-     * @deprecated Use {@link #getPlaceValidator()}
-     */
-    @Deprecated
-    public Function<ValidatorInfo, Boolean> getItemValidator() {
-        return getPlaceValidator();
-    }
-
-    /**
-     * Get the item place validator
      * @return The item validator
      */
     public Function<ValidatorInfo, Boolean> getPlaceValidator() {
@@ -404,17 +377,6 @@ public class GuiStorageElement extends GuiElement {
      * Set a function that can validate whether an item can be placed in the slot
      * @param placeValidator The item validator that takes a {@link ValidatorInfo} and returns <code>true</code> for items that
      *                      should and <code>false</code> for items that should not be placeable in that slot
-     * @deprecated Use {@link #setPlaceValidator(Function)}
-     */
-    @Deprecated
-    public void setItemValidator(Function<ValidatorInfo, Boolean> placeValidator) {
-        this.placeValidator = placeValidator;
-    }
-
-    /**
-     * Set a function that can validate whether an item can be placed in the slot
-     * @param placeValidator The item validator that takes a {@link ValidatorInfo} and returns <code>true</code> for items that
-     *                      should and <code>false</code> for items that should not be placeable in that slot
      */
     public void setPlaceValidator(Function<ValidatorInfo, Boolean> placeValidator) {
         this.placeValidator = placeValidator;
@@ -427,18 +389,6 @@ public class GuiStorageElement extends GuiElement {
      */
     public void setTakeValidator(Function<ValidatorInfo, Boolean> takeValidator) {
         this.takeValidator = takeValidator;
-    }
-
-    /**
-     * Validate whether an item can be placed in a slot with the item validator set in {@link #setItemValidator(Function)}
-     * @param slot  The slot the item should be tested for
-     * @param item  The item to test
-     * @return      <code>true</code> for items that should and <code>false</code> for items that should not work in that slot
-     * @deprecated Use {@link #validateItemPlace(int, ItemStack)}
-     */
-    @Deprecated
-    public boolean validateItem(int slot, ItemStack item) {
-        return validateItemPlace(slot, item);
     }
 
     /**

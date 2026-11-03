@@ -22,7 +22,9 @@ package de.themoep.inventorygui;
  * SOFTWARE.
  */
 
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextReplacementConfig;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.Nameable;
 import org.bukkit.Sound;
@@ -52,7 +54,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.material.MaterialData;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -69,13 +70,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.logging.Level;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * The main library class that lets you create and manage your GUIs
@@ -101,9 +101,9 @@ public class InventoryGui implements Listener {
     private final Plugin plugin;
     private final GuiListener listener;
     private InventoryCreator creator;
-    private BiConsumer<ItemMeta, String> itemNameSetter;
-    private BiConsumer<ItemMeta, List<String>> itemLoreSetter;
-    private String title;
+    private BiConsumer<ItemMeta, Component> itemNameSetter;
+    private BiConsumer<ItemMeta, List<Component>> itemLoreSetter;
+    private Component title;
     private boolean titleUpdated = false;
     private final char[] slots;
     private int width;
@@ -176,7 +176,7 @@ public class InventoryGui implements Listener {
      * @param elements          The {@link GuiElement}s that the gui should have. You can also use {@link #addElement(GuiElement)} later.
      * @throws IllegalArgumentException Thrown when the provided rows cannot be matched to an InventoryType
      */
-    public InventoryGui(Plugin plugin, InventoryCreator creator, BiConsumer<ItemMeta, String> itemNameSetter, BiConsumer<ItemMeta, List<String>> itemLoreSetter, InventoryHolder owner, String title, String[] rows, GuiElement... elements) {
+    public InventoryGui(Plugin plugin, InventoryCreator creator, BiConsumer<ItemMeta, Component> itemNameSetter, BiConsumer<ItemMeta, List<Component>> itemLoreSetter, InventoryHolder owner, Component title, String[] rows, GuiElement... elements) {
         this.plugin = plugin;
         this.creator = creator;
         this.itemNameSetter = itemNameSetter;
@@ -191,7 +191,7 @@ public class InventoryGui implements Listener {
                 width = row.length();
             }
         }
-        for (int i = 0; i < ROW_WIDTHS.length && i < INVENTORY_TYPES.length; i++) {
+        for (int i = 0; i < ROW_WIDTHS.length; i++) {
             if (width < ROW_WIDTHS[i]) {
                 width = ROW_WIDTHS[i];
             }
@@ -239,8 +239,8 @@ public class InventoryGui implements Listener {
      * @param elements  The {@link GuiElement}s that the gui should have. You can also use {@link #addElement(GuiElement)} later.
      * @throws IllegalArgumentException Thrown when the provided rows cannot be matched to an InventoryType
      */
-    public InventoryGui(Plugin plugin, InventoryCreator creator, InventoryHolder owner, String title, String[] rows, GuiElement... elements) {
-        this(plugin, creator, ItemMeta::setDisplayName, ItemMeta::setLore, owner, title, rows, elements);
+    public InventoryGui(Plugin plugin, InventoryCreator creator, InventoryHolder owner, Component title, String[] rows, GuiElement... elements) {
+        this(plugin, creator, ItemMeta::displayName, ItemMeta::lore, owner, title, rows, elements);
     }
 
     /**
@@ -254,7 +254,7 @@ public class InventoryGui implements Listener {
      * @param elements  The {@link GuiElement}s that the gui should have. You can also use {@link #addElement(GuiElement)} later.
      * @throws IllegalArgumentException Thrown when the provided rows cannot be matched to an InventoryType
      */
-    public InventoryGui(Plugin plugin, InventoryHolder owner, String title, String[] rows, GuiElement... elements) {
+    public InventoryGui(Plugin plugin, InventoryHolder owner, Component title, String[] rows, GuiElement... elements) {
         this(plugin, new InventoryCreator(
                 (gui, who, type) -> plugin.getServer().createInventory(new Holder(gui), type, gui.replaceVars(who, gui.getTitle())),
                 (gui, who, size) -> plugin.getServer().createInventory(new Holder(gui), size, gui.replaceVars(who, gui.getTitle()))),
@@ -270,7 +270,7 @@ public class InventoryGui implements Listener {
      * @param elements  The {@link GuiElement}s that the gui should have. You can also use {@link #addElement(GuiElement)} later.
      * @throws IllegalArgumentException Thrown when the provided rows cannot be matched to an InventoryType
      */
-    public InventoryGui(Plugin plugin, String title, String[] rows, GuiElement... elements) {
+    public InventoryGui(Plugin plugin, Component title, String[] rows, GuiElement... elements) {
         this(plugin, null, title, rows, elements);
     }
 
@@ -285,7 +285,7 @@ public class InventoryGui implements Listener {
      * @param elements  The {@link GuiElement}s that the gui should have. You can also use {@link #addElement(GuiElement)} later.
      * @throws IllegalArgumentException Thrown when the provided rows cannot be matched to an InventoryType
      */
-    public InventoryGui(Plugin plugin, InventoryHolder owner, String title, String[] rows, Collection<GuiElement> elements) {
+    public InventoryGui(Plugin plugin, InventoryHolder owner, Component title, String[] rows, Collection<GuiElement> elements) {
         this(plugin, owner, title, rows);
         addElements(elements);
     }
@@ -342,11 +342,11 @@ public class InventoryGui implements Listener {
      * @param action    The {@link de.themoep.inventorygui.GuiElement.Action} to run when the player clicks on this element
      * @param text      The text to display on this element, placeholders are automatically
      *                  replaced, see {@link InventoryGui#replaceVars} for a list of the
-     *                  placeholder variables. Empty text strings are also filter out, use
+     *                  placeholder variables. Empty text components are also filter out, use
      *                  a single space if you want to add an empty line!<br>
      *                  If it's not set/empty the item's default name will be used
      */
-    public void addElement(char slotChar, ItemStack item, GuiElement.Action action, String... text) {
+    public void addElement(char slotChar, ItemStack item, GuiElement.Action action, Component... text) {
         addElement(new StaticGuiElement(slotChar, item, action, text));
     }
 
@@ -356,61 +356,26 @@ public class InventoryGui implements Listener {
      * @param item      The item that should be displayed
      * @param text      The text to display on this element, placeholders are automatically
      *                  replaced, see {@link InventoryGui#replaceVars} for a list of the
-     *                  placeholder variables. Empty text strings are also filter out, use
+     *                  placeholder variables. Empty text components are also filter out, use
      *                  a single space if you want to add an empty line!<br>
      *                  If it's not set/empty the item's default name will be used
      */
-    public void addElement(char slotChar, ItemStack item, String... text) {
+    public void addElement(char slotChar, ItemStack item, Component... text) {
         addElement(new StaticGuiElement(slotChar, item, null, text));
     }
 
     /**
-     * Create and add a {@link StaticGuiElement} in one quick method.
-     * @param slotChar  The character to specify the elements position based on the gui setup string
-     * @param materialData  The {@link MaterialData} of the item of tihs element
-     * @param action        The {@link de.themoep.inventorygui.GuiElement.Action} to run when the player clicks on this element
-     * @param text      The text to display on this element, placeholders are automatically
-     *                  replaced, see {@link InventoryGui#replaceVars} for a list of the
-     *                  placeholder variables. Empty text strings are also filter out, use
-     *                  a single space if you want to add an empty line!<br>
-     *                  If it's not set/empty the item's default name will be used
-     * @deprecated      Usage of {@link MaterialData} is deprecated
-     */
-    @Deprecated
-    public void addElement(char slotChar, MaterialData materialData, GuiElement.Action action, String... text) {
-        addElement(slotChar, materialData.toItemStack(1), action, text);
-    }
-
-    /**
-     * Create and add a {@link StaticGuiElement}
-     * @param slotChar  The character to specify the elements position based on the gui setup string
-     * @param material  The {@link Material} that the item should have
-     * @param data      The <code>byte</code> representation of the material data of this element
-     * @param action    The {@link GuiElement.Action} to run when the player clicks on this element
-     * @param text      The text to display on this element, placeholders are automatically
-     *                  replaced, see {@link InventoryGui#replaceVars} for a list of the
-     *                  placeholder variables. Empty text strings are also filter out, use
-     *                  a single space if you want to add an empty line!<br>
-     *                  If it's not set/empty the item's default name will be used
-     * @deprecated      Usage of byte data
-     */
-    @Deprecated
-    public void addElement(char slotChar, Material material, byte data, GuiElement.Action action, String... text) {
-        addElement(slotChar, new MaterialData(material, data), action, text);
-    }
-
-    /**
      * Create and add a {@link StaticGuiElement}
      * @param slotChar  The character to specify the elements position based on the gui setup string
      * @param material  The {@link Material} that the item should have
      * @param action    The {@link GuiElement.Action} to run when the player clicks on this element
      * @param text      The text to display on this element, placeholders are automatically
      *                  replaced, see {@link InventoryGui#replaceVars} for a list of the
-     *                  placeholder variables. Empty text strings are also filter out, use
+     *                  placeholder variables. Empty text components are also filter out, use
      *                  a single space if you want to add an empty line!<br>
      *                  If it's not set/empty the item's default name will be used
      */
-    public void addElement(char slotChar, Material material, GuiElement.Action action, String... text) {
+    public void addElement(char slotChar, Material material, GuiElement.Action action, Component... text) {
         addElement(slotChar, new ItemStack(material), action, text);
     }
 
@@ -492,7 +457,7 @@ public class InventoryGui implements Listener {
      * @param item  The item for the filler element
      */
     public void setFiller(ItemStack item) {
-        addElement(new StaticGuiElement(' ', item, " "));
+        addElement(new StaticGuiElement(' ', item, Component.space()));
     }
 
     /**
@@ -916,15 +881,15 @@ public class InventoryGui implements Listener {
      * Get the setter for item names.
      * @return The setter instance
      */
-    public BiConsumer<ItemMeta, String> getItemNameSetter() {
+    public BiConsumer<ItemMeta, Component> getItemNameSetter() {
         return itemNameSetter;
     }
 
     /**
      * Sets the setter ofr item names.
-     * @param itemNameSetter The item name setter BiConsumer taking the ItemMeta to be modified and the string for the name
+     * @param itemNameSetter The item name setter BiConsumer taking the ItemMeta to be modified and the component for the name
      */
-    public void setItemNameSetter(BiConsumer<ItemMeta, String> itemNameSetter) {
+    public void setItemNameSetter(BiConsumer<ItemMeta, Component> itemNameSetter) {
         this.itemNameSetter = Objects.requireNonNull(itemNameSetter);
     }
 
@@ -932,15 +897,15 @@ public class InventoryGui implements Listener {
      * Get the setter for item lores.
      * @return The setter instance
      */
-    public BiConsumer<ItemMeta, List<String>> getItemLoreSetter() {
+    public BiConsumer<ItemMeta, List<Component>> getItemLoreSetter() {
         return itemLoreSetter;
     }
 
     /**
      * Sets the setter for item lores.
-     * @param itemLoreSetter The item lore setter BiConsumer taking the ItemMeta to be modified and the string list for the lore lines
+     * @param itemLoreSetter The item lore setter BiConsumer taking the ItemMeta to be modified and the component list for the lore lines
      */
-    public void setItemLoreSetter(BiConsumer<ItemMeta, List<String>> itemLoreSetter) {
+    public void setItemLoreSetter(BiConsumer<ItemMeta, List<Component>> itemLoreSetter) {
         this.itemLoreSetter = Objects.requireNonNull(itemLoreSetter);
     }
 
@@ -1126,7 +1091,7 @@ public class InventoryGui implements Listener {
      * Get the title of the gui
      * @return  The title of the gui
      */
-    public String getTitle() {
+    public Component getTitle() {
         return title;
     }
 
@@ -1134,7 +1099,7 @@ public class InventoryGui implements Listener {
      * Set the title of the gui
      * @param title The {@link String} that should be the title of the gui
      */
-    public void setTitle(String title) {
+    public void setTitle(Component title) {
         this.title = title;
         this.titleUpdated = true;
     }
@@ -1562,47 +1527,42 @@ public class InventoryGui implements Listener {
             return event;
         }
     }
-    
-    /**
-     * Set the text of an item using the display name and the lore.
-     * Also replaces any placeholders in the text and filters out empty lines.
-     * Use a single space to create an emtpy line.
-     * @param item      The {@link ItemStack} to set the text for
-     * @param text      The text lines to set
-     * @deprecated Use {@link #setItemText(HumanEntity, ItemStack, String...)}
-     */
-    @Deprecated
-    public void setItemText(ItemStack item, String... text) {
-        setItemText(null, item, text);
-    }
 
     /**
      * Set the text of an item using the display name and the lore.
      * Also replaces any placeholders in the text and filters out empty lines.
-     * Use a single space to create an emtpy line.
+     * Use a single space to create an empty line.
      * @param player    The player viewing the GUI
      * @param item      The {@link ItemStack} to set the text for
      * @param text      The text lines to set
      */
-    public void setItemText(HumanEntity player, ItemStack item, String... text) {
-        if (item != null && text != null && text.length > 0) {
+    public void setItemText(HumanEntity player, ItemStack item, Component... text) {
+        if (item == null && text == null) {
+            return;
+        }
+        if (text.length == 1) {
+            setItemName(player, item, text[0]);
+        } else {
+            setItemLore(player, item, text);
+        }
+    }
+
+    private void setItemName(HumanEntity player, ItemStack item, Component text) {
+        if (item != null && text != null) {
             ItemMeta meta = item.getItemMeta();
-            if (meta != null) {
-                String combined = replaceVars(player, Arrays.stream(text)
-                        .map(s -> s == null ? " " : s)
-                        .filter(s -> !s.isEmpty())
-                        .collect(Collectors.joining("\n")));
-                String[] lines = combined.split("\n");
-                if (text[0] != null) {
-                    getItemNameSetter().accept(meta, lines[0]);
-                }
-                if (lines.length > 1) {
-                    getItemLoreSetter().accept(meta, Arrays.asList(Arrays.copyOfRange(lines, 1, lines.length)));
-                } else {
-                    meta.setLore(null);
-                }
-                item.setItemMeta(meta);
-            }
+            getItemNameSetter().accept(meta, replaceVars(player, text));
+        }
+    }
+
+    private void setItemLore(HumanEntity player, ItemStack item, Component... lines) {
+        if (item != null && lines != null && lines.length > 0) {
+            ItemMeta meta = item.getItemMeta();
+            List<Component> filtered = Arrays.stream(lines)
+                .map(c -> c == null ? Component.space() : c)
+                .filter(c -> !PlainTextComponentSerializer.plainText().serialize(c).isEmpty())
+                .map(c -> replaceVars(player, c))
+                .toList();
+            getItemLoreSetter().accept(meta, filtered);
         }
     }
 
@@ -1610,7 +1570,25 @@ public class InventoryGui implements Listener {
      * Replace some placeholders in the with values regarding the gui's state. Replaced color codes.<br>
      * The placeholders are:<br>
      * <code>%plugin%</code>    - The name of the plugin that this gui is from.<br>
-     * <code>%owner%</code>     - The name of the owner of this gui. Will be an empty string when the owner is null.<br>
+     * <code>%owner%</code>     - The name of the owner of this gui. Will be an empty component when the owner is null.<br>
+     * <code>%title%</code>     - The title of this GUI.<br>
+     * <code>%page%</code>      - The current page that this gui is on.<br>
+     * <code>%nextpage%</code>  - The next page. "none" if there is no next page.<br>
+     * <code>%prevpage%</code>  - The previous page. "none" if there is no previous page.<br>
+     * <code>%pages%</code>     - The amount of pages that this gui has.
+     * @param player        The player viewing the GUI
+     * @param text          The text to replace the placeholders in
+     * @return      The text with all placeholders replaced
+     */
+    public Component replaceVars(@NotNull HumanEntity player, @NotNull Component text) {
+        return replaceVars(player, text, Map.of());
+    }
+
+    /**
+     * Replace some placeholders in the with values regarding the gui's state. Replaced color codes.<br>
+     * The placeholders are:<br>
+     * <code>%plugin%</code>    - The name of the plugin that this gui is from.<br>
+     * <code>%owner%</code>     - The name of the owner of this gui. Will be an empty component when the owner is null.<br>
      * <code>%title%</code>     - The title of this GUI.<br>
      * <code>%page%</code>      - The current page that this gui is on.<br>
      * <code>%nextpage%</code>  - The next page. "none" if there is no next page.<br>
@@ -1621,35 +1599,31 @@ public class InventoryGui implements Listener {
      * @param replacements  Additional replacements. i = placeholder, i+1 = replacements
      * @return      The text with all placeholders replaced
      */
-    public String replaceVars(@NotNull HumanEntity player, @NotNull String text, String... replacements) {
-        Map<String, String> map = new LinkedHashMap<>();
-        for (int i = 0; i + 1 < replacements.length; i += 2) {
-            map.putIfAbsent(replacements[i], replacements[i + 1]);
-        }
-
-        map.putIfAbsent("plugin", plugin.getName());
+    public Component replaceVars(@NotNull HumanEntity player, @NotNull Component text, Map<String, Component> replacements) {
+        Map<String, Component> map = new LinkedHashMap<>(replacements);
+        map.putIfAbsent("plugin", Component.text(plugin.getName()));
         try {
-            map.putIfAbsent("owner", owner instanceof Nameable ? ((Nameable) owner).getCustomName() : "");
+            map.putIfAbsent("owner", owner instanceof Nameable nameable ? nameable.customName() : Component.empty());
         } catch (NoSuchMethodError | NoClassDefFoundError e) {
-            map.putIfAbsent("owner", owner instanceof Entity ? ((Entity) owner).getCustomName() : "");
+            map.putIfAbsent("owner", owner instanceof Entity entity ? entity.customName() : Component.empty());
         }
         map.putIfAbsent("title", title);
-        map.putIfAbsent("page", String.valueOf(getPageNumber(player) + 1));
-        map.putIfAbsent("nextpage", getPageNumber(player) + 1 < getPageAmount(player) ? String.valueOf(getPageNumber(player) + 2) : "none");
-        map.putIfAbsent("prevpage", getPageNumber(player) > 0 ? String.valueOf(getPageNumber(player)) : "none");
-        map.putIfAbsent("pages", String.valueOf(getPageAmount(player)));
+        map.putIfAbsent("page", Component.text(getPageNumber(player) + 1));
+        map.putIfAbsent("nextpage", getPageNumber(player) + 1 < getPageAmount(player) ? Component.text(getPageNumber(player) + 2) : Component.text("None"));
+        map.putIfAbsent("prevpage", getPageNumber(player) > 0 ? Component.text(getPageNumber(player)) : Component.text("None"));
+        map.putIfAbsent("pages", Component.text(getPageAmount(player)));
 
-        return ChatColor.translateAlternateColorCodes('&', replace(text, map));
+        return replace(text, map);
     }
 
     /**
-     * Replace placeholders in a string
-     * @param string        The string to replace in
+     * Replace placeholders in a component
+     * @param component        The component to replace in
      * @param replacements  What to replace the placeholders with. The n-th index is the placeholder, the n+1-th the value.
-     * @return The string with all placeholders replaced (using the configured placeholder prefix and suffix)
+     * @return The component with all placeholders replaced (using the configured placeholder prefix and suffix)
      */
-    private String replace(String string, Map<String, String> replacements) {
-        for (Map.Entry<String, String> entry : replacements.entrySet()) {
+    private Component replace(Component component, Map<String, Component> replacements) {
+        for (Map.Entry<String, Component> entry : replacements.entrySet()) {
             if (entry.getKey() == null) {
                 continue;
             }
@@ -1658,9 +1632,14 @@ public class InventoryGui implements Listener {
             if (pattern == null) {
                 PATTERN_CACHE.put(placeholder, pattern = Pattern.compile(placeholder, Pattern.LITERAL));
             }
-            string = pattern.matcher(string).replaceAll(Matcher.quoteReplacement(entry.getValue() != null ? entry.getValue() : "null"));
+            Component replacement = Optional.ofNullable(entry.getValue()).orElse(Component.text("None"));
+            TextReplacementConfig trc = TextReplacementConfig.builder()
+                .match(pattern)
+                .replacement(replacement)
+                .build();
+            component = component.replaceText(trc);
         }
-        return string;
+        return component;
     }
     
     /**
@@ -1668,11 +1647,10 @@ public class InventoryGui implements Listener {
      * @param click The click that startet it all
      */
     void simulateCollectToCursor(GuiElement.Click click) {
-        if (!(click.getRawEvent() instanceof InventoryClickEvent)) {
+        if (!(click.getRawEvent() instanceof InventoryClickEvent event)) {
             // Only a click event can trigger the collection to the cursor
             return;
         }
-        InventoryClickEvent event = (InventoryClickEvent) click.getRawEvent();
         if (event.getCurrentItem() != null && !event.getCurrentItem().getType().isAir() && !event.getCurrentItem().isSimilar(click.getCursor())) {
             // Ensure the current item isn't some other item type
             return;
@@ -1689,8 +1667,7 @@ public class InventoryGui implements Listener {
                     itemInGui = true;
                 }
                 GuiElement element = getEffectiveElement(click.getWhoClicked(), i);
-                if (element instanceof GuiStorageElement) {
-                    GuiStorageElement storageElement = (GuiStorageElement) element;
+                if (element instanceof GuiStorageElement storageElement) {
                     if (storageElement.validateItemTake(i, viewItem)) {
                         int resultSize = addToStack(newCursor, viewItem);
                         if (resultSize > -1) {

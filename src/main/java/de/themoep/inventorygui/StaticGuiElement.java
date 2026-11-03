@@ -22,6 +22,7 @@ package de.themoep.inventorygui;
  * SOFTWARE.
  */
 
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.ItemStack;
 
@@ -32,7 +33,7 @@ import org.bukkit.inventory.ItemStack;
 public class StaticGuiElement extends GuiElement {
     private ItemStack item;
     private int number;
-    private String[] text;
+    private Component[] text;
     
     /**
      * Represents an element in a gui
@@ -47,7 +48,7 @@ public class StaticGuiElement extends GuiElement {
      *                  If it's not set/empty the item's default name will be used
      * @throws IllegalArgumentException If the number is below 1 or above the max stack count (currently 64)
      */
-    public StaticGuiElement(char slotChar, ItemStack item, int number, Action action, String... text) throws IllegalArgumentException {
+    public StaticGuiElement(char slotChar, ItemStack item, int number, Action action, Component... text) throws IllegalArgumentException {
         super(slotChar, action);
         this.item = item;
         this.text = text;
@@ -65,7 +66,7 @@ public class StaticGuiElement extends GuiElement {
      *                  a single space if you want to add an empty line!<br>
      *                  If it's not set/empty the item's default name will be used
      */
-    public StaticGuiElement(char slotChar, ItemStack item, Action action, String... text) {
+    public StaticGuiElement(char slotChar, ItemStack item, Action action, Component... text) {
         this(slotChar, item, item != null ? item.getAmount() : 1, action, text);
     }
 
@@ -79,7 +80,7 @@ public class StaticGuiElement extends GuiElement {
      *                  a single space if you want to add an empty line!<br>
      *                  If it's not set/empty the item's default name will be used
      */
-    public StaticGuiElement(char slotChar, ItemStack item, String... text) {
+    public StaticGuiElement(char slotChar, ItemStack item, Component... text) {
         this(slotChar, item, item != null ? item.getAmount() : 1, null, text);
     }
 
@@ -122,7 +123,7 @@ public class StaticGuiElement extends GuiElement {
      *              a single space if you want to add an empty line!<br>
      *              If it's not set/empty the item's default name will be used
      */
-    public void setText(String... text) {
+    public void setText(Component... text) {
         this.text = text;
     }
 
@@ -130,7 +131,7 @@ public class StaticGuiElement extends GuiElement {
      * Get the text that this element displays
      * @return  The text that is displayed on this element
      */
-    public String[] getText() {
+    public Component[] getText() {
         return text;
     }
 

@@ -22,6 +22,7 @@ package de.themoep.inventorygui;
  * SOFTWARE.
  */
 
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.ItemStack;
 
@@ -230,7 +231,7 @@ public class GuiElementGroup extends GuiElement {
      * @param item The item for the filler element
      */
     public void setFiller(ItemStack item) {
-        filler = new StaticGuiElement(' ', item, " ");
+        filler = new StaticGuiElement(' ', item, Component.space());
         filler.setGui(gui);
     }
     

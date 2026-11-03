@@ -113,16 +113,6 @@ public class GuiView {
         return invoke(COUNT_SLOTS);
     }
 
-    public boolean setProperty(InventoryView.Property prop, int value) {
-        try {
-            return (boolean) SET_PROPERTY.invoke(prop, value);
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Throwable t) {
-            throw new AssertionError(t);
-        }
-    }
-
     public String getTitle() {
         return invoke(GET_TITLE);
     }

@@ -1,5 +1,6 @@
 package de.themoep.inventorygui;
 
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.ItemStack;
 
@@ -23,7 +24,7 @@ public class GuiBackElement extends StaticGuiElement {
      *                 a single space if you want to add an empty line!<br>
      *                 If it's not set/empty the item's default name will be used
      */
-    public GuiBackElement(char slotChar, ItemStack item, String... text) {
+    public GuiBackElement(char slotChar, ItemStack item, Component... text) {
         this(slotChar, item, false, text);
     }
 
@@ -40,7 +41,7 @@ public class GuiBackElement extends StaticGuiElement {
      *                 a single space if you want to add an empty line!<br>
      *                 If it's not set/empty the item's default name will be used
      */
-    public GuiBackElement(char slotChar, ItemStack item, boolean close, String... text) {
+    public GuiBackElement(char slotChar, ItemStack item, boolean close, Component... text) {
         super(slotChar, item, text);
         this.close = close;
 
