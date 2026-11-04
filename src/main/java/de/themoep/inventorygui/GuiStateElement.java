@@ -22,6 +22,7 @@ package de.themoep.inventorygui;
  * SOFTWARE.
  */
 
+import de.themoep.inventorygui.actions.ClickAction;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.ItemStack;
@@ -66,7 +67,7 @@ public class GuiStateElement extends GuiElement {
                 click.getGui().playClickSound();
             }
             gui.draw(click.getWhoClicked(), false);
-            return true;
+            return ClickAction.Result.CANCEL_EVENT;
         });
     }
 

@@ -22,6 +22,7 @@ package de.themoep.inventorygui;
  * SOFTWARE.
  */
 
+import de.themoep.inventorygui.actions.ClickAction;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextReplacementConfig;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -116,7 +117,7 @@ public class InventoryGui implements Listener {
     private InventoryHolder owner;
     private final Map<UUID, Integer> pageNumbers = new ConcurrentHashMap<>();
     private final Map<UUID, Integer> pageAmounts = new ConcurrentHashMap<>();
-    private GuiElement.Action outsideAction = click -> false;
+    private ClickAction outsideAction = click -> ClickAction.Result.COMPLETE;
     private CloseAction closeAction = close -> true;
     private String clickSound = getDefaultClickSound();
     private boolean silent = false;
@@ -348,7 +349,7 @@ public class InventoryGui implements Listener {
      *                  a single space if you want to add an empty line!<br>
      *                  If it's not set/empty the item's default name will be used
      */
-    public void addElement(char slotChar, ItemStack item, GuiElement.Action action, Component... text) {
+    public void addElement(char slotChar, ItemStack item, ClickAction action, Component... text) {
         addElement(new StaticGuiElement(slotChar, item, action, text));
     }
 
@@ -370,14 +371,14 @@ public class InventoryGui implements Listener {
      * Create and add a {@link StaticGuiElement}
      * @param slotChar  The character to specify the elements position based on the gui setup string
      * @param material  The {@link Material} that the item should have
-     * @param action    The {@link GuiElement.Action} to run when the player clicks on this element
+     * @param action    The {@link ClickAction} to run when the player clicks on this element
      * @param text      The text to display on this element, placeholders are automatically
      *                  replaced, see {@link InventoryGui#replaceVars} for a list of the
      *                  placeholder variables. Empty text components are also filter out, use
      *                  a single space if you want to add an empty line!<br>
      *                  If it's not set/empty the item's default name will be used
      */
-    public void addElement(char slotChar, Material material, GuiElement.Action action, Component... text) {
+    public void addElement(char slotChar, Material material, ClickAction action, Component... text) {
         addElement(slotChar, new ItemStack(material), action, text);
     }
 
@@ -985,7 +986,7 @@ public class InventoryGui implements Listener {
      * Get the Action that is run when clicked outside of the inventory
      * @return  The Action for when the player clicks outside the inventory; can be null
      */
-    public GuiElement.Action getOutsideAction() {
+    public ClickAction getOutsideAction() {
         return outsideAction;
     }
     
@@ -993,7 +994,7 @@ public class InventoryGui implements Listener {
      * Set the Action that is run when clicked outside of the inventory
      * @param outsideAction The Action for when the player clicks outside the inventory; can be null
      */
-    public void setOutsideAction(GuiElement.Action outsideAction) {
+    public void setOutsideAction(ClickAction outsideAction) {
         this.outsideAction = outsideAction;
     }
     
@@ -1162,7 +1163,7 @@ public class InventoryGui implements Listener {
      * @return The resulting click object
      */
     private GuiElement.Click handleInteract(InventoryInteractEvent event, ClickType clickType, int slot, ItemStack cursor) {
-        GuiElement.Action action = null;
+        ClickAction action = null;
         GuiElement element = null;
         try {
             if (slot >= 0) {
@@ -1188,7 +1189,7 @@ public class InventoryGui implements Listener {
                 return null;
             }
             GuiElement.Click click = new GuiElement.Click(this, slot, clickType, cursor, element, event);
-            if (action == null || action.onClick(click)) {
+            if (action == null || action.onClick(click) == ClickAction.Result.CANCEL_EVENT) {
                 event.setCancelled(true);
                 if (event.getWhoClicked() instanceof Player) {
                     ((Player) event.getWhoClicked()).updateInventory();

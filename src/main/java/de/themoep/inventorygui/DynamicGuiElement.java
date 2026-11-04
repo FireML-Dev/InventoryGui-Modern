@@ -22,6 +22,7 @@ package de.themoep.inventorygui;
  * SOFTWARE.
  */
 
+import de.themoep.inventorygui.actions.ClickAction;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -101,7 +102,7 @@ public class DynamicGuiElement extends GuiElement {
     }
     
     @Override
-    public Action getAction(HumanEntity who) {
+    public ClickAction getAction(HumanEntity who) {
         GuiElement element = getCachedElement(who);
         return element != null ? element.getAction(who) : null;
     }

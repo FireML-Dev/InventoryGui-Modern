@@ -22,6 +22,7 @@ package de.themoep.inventorygui;
  * SOFTWARE.
  */
 
+import de.themoep.inventorygui.actions.ClickAction;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryInteractEvent;
@@ -32,7 +33,7 @@ import org.bukkit.inventory.ItemStack;
  */
 public abstract class GuiElement {
     private final char slotChar;
-    private Action action;
+    private ClickAction action;
     protected int[] slots = new int[0];
     protected InventoryGui gui;
 
@@ -41,7 +42,7 @@ public abstract class GuiElement {
      * @param slotChar The character to replace in the gui setup string
      * @param action   The action to run when the player clicks on this element
      */
-    public GuiElement(char slotChar, Action action) {
+    public GuiElement(char slotChar, ClickAction action) {
         this.slotChar = slotChar;
         setAction(action);
     }
@@ -75,7 +76,7 @@ public abstract class GuiElement {
      * @param who   The player who views the page
      * @return      The action to run
      */
-    public Action getAction(HumanEntity who) {
+    public ClickAction getAction(HumanEntity who) {
         return action;
     }
 
@@ -84,7 +85,7 @@ public abstract class GuiElement {
      * @param action    The action to run. The {@link Action#onClick} method should
      *                  return whether or not the click event should be cancelled
      */
-    public void setAction(Action action) {
+    public void setAction(ClickAction action) {
         this.action = action;
     }
 
@@ -152,22 +153,6 @@ public abstract class GuiElement {
      */
     public GuiElement getEffectiveElement(HumanEntity who, int slot) {
         return this;
-    }
-
-    /**
-     * A functional interface for specifying how clicking on the element should be treated
-     * by implementing the {@link #onClick(Click)} method.
-     * The method should return whether the click event should be cancelled or not.
-     */
-    public static interface Action {
-
-        /**
-         * Executed when a player clicks on an element
-         * @param click The Click class containing information about the click
-         * @return Whether or not the click event should be cancelled
-         */
-        boolean onClick(Click click);
-
     }
 
     public static class Click {

@@ -1,5 +1,6 @@
 package de.themoep.inventorygui;
 
+import de.themoep.inventorygui.actions.ClickAction;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.ItemStack;
@@ -51,7 +52,7 @@ public class GuiBackElement extends StaticGuiElement {
             } else if (close) {
                 click.getGui().close();
             }
-            return true;
+            return ClickAction.Result.CANCEL_EVENT;
         });
     }
 

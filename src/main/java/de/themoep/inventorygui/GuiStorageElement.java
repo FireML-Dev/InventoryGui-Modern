@@ -22,6 +22,7 @@ package de.themoep.inventorygui;
  * SOFTWARE.
  */
 
+import de.themoep.inventorygui.actions.ClickAction;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -106,7 +107,7 @@ public class GuiStorageElement extends GuiElement {
         this.takeValidator = takeValidator;
         setAction(click -> {
             if (getStorageSlot(click.getWhoClicked(), click.getSlot()) < 0) {
-                return true;
+                return ClickAction.Result.CANCEL_EVENT;
             }
             ItemStack storageItem = getStorageItem(click.getWhoClicked(), click.getSlot());
             ItemStack slotItem = GuiView.of(click.getRawEvent().getView()).getTopInventory().getItem(click.getSlot());
@@ -116,65 +117,58 @@ public class GuiStorageElement extends GuiElement {
                             || storageItem != null && storageItem.getType().getKey().getKey().contains("bundle")
                             || slotItem != null && slotItem.getType().getKey().getKey().contains("bundle"))) {
                 gui.draw(click.getWhoClicked(), false);
-                return true;
+                return ClickAction.Result.CANCEL_EVENT;
             }
 
             if (slotItem == null && storageItem != null && storageItem.getType() != Material.AIR
                     || storageItem == null && slotItem != null && slotItem.getType() != Material.AIR
                     || storageItem != null && !storageItem.equals(slotItem)) {
                 gui.draw(click.getWhoClicked(), false);
-                return true;
+                return ClickAction.Result.CANCEL_EVENT;
             }
 
-            if (!(click.getRawEvent() instanceof InventoryClickEvent)) {
+            if (!(click.getRawEvent() instanceof InventoryClickEvent event)) {
                 // Only the click event will be handled here, drag event is handled separately
-                return true;
+                return ClickAction.Result.CANCEL_EVENT;
             }
-
-            InventoryClickEvent event = (InventoryClickEvent) click.getRawEvent();
 
             ItemStack movedItem = null;
             switch (event.getAction()) {
                 case NOTHING:
                 case CLONE_STACK:
-                    return !validateItemTake(click.getSlot(), slotItem);
+                    return validateItemTake(click.getSlot(), slotItem) ? ClickAction.Result.COMPLETE : ClickAction.Result.CANCEL_EVENT;
                 case MOVE_TO_OTHER_INVENTORY:
                     final GuiView view = GuiView.of(event.getView());
                     if (event.getRawSlot() < view.getTopInventory().getSize()) {
-                        // Moved from storage
-
                         if (!validateItemTake(click.getSlot(), slotItem)) {
-                            return true;
+                            return ClickAction.Result.CANCEL_EVENT;
                         }
-
                         // Check if there is actually space (more advanced checks can unfortunately not be supported right now)
                         if (GuiView.of(click.getRawEvent().getView()).getBottomInventory().firstEmpty() == -1) {
                             // No empty slot, cancel
-                            return true;
+                            return ClickAction.Result.CANCEL_EVENT;
                         }
-                        movedItem = null;
                     } else {
                         // Moved to storage
 
                         // Check if there is actually space (more advanced checks can unfortunately not be supported right now)
                         if (view.getTopInventory().firstEmpty() == -1) {
                             // No empty slot, cancel
-                            return true;
+                            return ClickAction.Result.CANCEL_EVENT;
                         }
                         movedItem = event.getCurrentItem();
                     }
                     // Update GUI to avoid display glitches
                     gui.runTask(() -> gui.draw(false));
                     break;
-                case HOTBAR_MOVE_AND_READD:
                 case HOTBAR_SWAP:
                     if (!validateItemTake(click.getSlot(), slotItem)) {
-                        return true;
+                        return ClickAction.Result.CANCEL_EVENT;
                     }
 
                     int button = event.getHotbarButton();
                     if (button < 0) {
-                        return true;
+                        return ClickAction.Result.CANCEL_EVENT;
                     }
                     ItemStack hotbarItem = GuiView.of(event.getView()).getBottomInventory().getItem(button);
                     if (hotbarItem != null) {
@@ -184,7 +178,7 @@ public class GuiStorageElement extends GuiElement {
                 case PICKUP_ONE:
                 case DROP_ONE_SLOT:
                     if (!validateItemTake(click.getSlot(), slotItem)) {
-                        return true;
+                        return ClickAction.Result.CANCEL_EVENT;
                     }
                     if (event.getCurrentItem() != null) {
                         movedItem = event.getCurrentItem().clone();
@@ -193,13 +187,12 @@ public class GuiStorageElement extends GuiElement {
                     break;
                 case DROP_ALL_SLOT:
                     if (!validateItemTake(click.getSlot(), slotItem)) {
-                        return true;
+                        return ClickAction.Result.CANCEL_EVENT;
                     }
-                    movedItem = null;
                     break;
                 case PICKUP_HALF:
                     if (!validateItemTake(click.getSlot(), slotItem)) {
-                        return true;
+                        return ClickAction.Result.CANCEL_EVENT;
                     }
                     if (event.getCurrentItem() != null) {
                         movedItem = event.getCurrentItem().clone();
@@ -208,21 +201,17 @@ public class GuiStorageElement extends GuiElement {
                     break;
                 case PLACE_SOME:
                     if (event.getCurrentItem() == null) {
-                        if (event.getCursor() != null) {
+                        if (!event.getCursor().isEmpty()) {
                             movedItem = event.getCursor().clone();
                         }
                     } else {
                         movedItem = event.getCurrentItem().clone();
-                        int newAmount = movedItem.getAmount() + (event.getCursor() != null ? event.getCursor().getAmount() : 0);
-                        if (newAmount < movedItem.getMaxStackSize()) {
-                            movedItem.setAmount(newAmount);
-                        } else {
-                            movedItem.setAmount(movedItem.getMaxStackSize());
-                        }
+                        int newAmount = movedItem.getAmount() + (event.getCursor().isEmpty() ? 0 : event.getCursor().getAmount());
+                        movedItem.setAmount(Math.min(newAmount, movedItem.getMaxStackSize()));
                     }
                     break;
                 case PLACE_ONE:
-                    if (event.getCursor() != null) {
+                    if (!event.getCursor().isEmpty()) {
                         if (event.getCurrentItem() == null) {
                             movedItem = event.getCursor().clone();
                             movedItem.setAmount(1);
@@ -233,7 +222,7 @@ public class GuiStorageElement extends GuiElement {
                     }
                     break;
                 case PLACE_ALL:
-                    if (event.getCursor() != null) {
+                    if (!event.getCursor().isEmpty()) {
                         movedItem = event.getCursor().clone();
                         if (event.getCurrentItem() != null && event.getCurrentItem().getAmount() > 0) {
                             movedItem.setAmount(event.getCurrentItem().getAmount() + movedItem.getAmount());
@@ -243,22 +232,21 @@ public class GuiStorageElement extends GuiElement {
                 case PICKUP_ALL:
                 case SWAP_WITH_CURSOR:
                     if (!validateItemTake(click.getSlot(), slotItem)) {
-                        return true;
+                        return ClickAction.Result.CANCEL_EVENT;
                     }
-                    if (event.getCursor() != null) {
+                    if (!event.getCursor().isEmpty()) {
                         movedItem = event.getCursor().clone();
                     }
                     break;
                 case COLLECT_TO_CURSOR:
-                    if (event.getCursor() == null
-                            || event.getCurrentItem() != null && event.getCurrentItem().getType() != Material.AIR) {
-                        return true;
+                    if (event.getCursor().isEmpty() || event.getCurrentItem() != null && event.getCurrentItem().getType() != Material.AIR) {
+                        return ClickAction.Result.CANCEL_EVENT;
                     }
                     if (!validateItemTake(click.getSlot(), slotItem)) {
-                        return true;
+                        return ClickAction.Result.CANCEL_EVENT;
                     }
                     gui.simulateCollectToCursor(click);
-                    return false;
+                    return ClickAction.Result.COMPLETE;
                 default:
                     click.getRawEvent().getWhoClicked().sendMessage(
                         Component.text(
@@ -266,9 +254,13 @@ public class GuiStorageElement extends GuiElement {
                             NamedTextColor.RED
                         )
                     );
-                    return true;
+                    return ClickAction.Result.CANCEL_EVENT;
             }
-            return !setStorageItem(click.getWhoClicked(), click.getSlot(), movedItem);
+            if (setStorageItem(click.getWhoClicked(), click.getSlot(), movedItem)) {
+                return ClickAction.Result.COMPLETE;
+            } else {
+                return ClickAction.Result.CANCEL_EVENT;
+            }
         });
         this.storage = storage;
     }
