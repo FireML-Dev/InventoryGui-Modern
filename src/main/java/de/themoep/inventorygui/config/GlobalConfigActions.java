@@ -21,6 +21,12 @@ public class GlobalConfigActions {
             click.getWhoClicked().closeInventory();
             return ClickAction.Result.CANCEL_EVENT;
         });
+
+        // Add page actions because these are handled separately.
+        ACTIONS.put("first-page", (gui, click) -> ClickAction.Result.CANCEL_EVENT);
+        ACTIONS.put("previous-page", (gui, click) -> ClickAction.Result.CANCEL_EVENT);
+        ACTIONS.put("next-page", (gui, click) -> ClickAction.Result.CANCEL_EVENT);
+        ACTIONS.put("last-page", (gui, click) -> ClickAction.Result.CANCEL_EVENT);
     }
 
     public static boolean register(String id, ConfigGui.ConfigGuiClickAction action, boolean force) {
