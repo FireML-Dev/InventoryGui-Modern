@@ -23,6 +23,7 @@ package de.themoep.inventorygui;
  */
 
 import de.themoep.inventorygui.actions.ClickAction;
+import de.themoep.inventorygui.actions.CloseAction;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextReplacementConfig;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -57,6 +58,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayDeque;
@@ -118,7 +120,7 @@ public class InventoryGui implements Listener {
     private final Map<UUID, Integer> pageNumbers = new ConcurrentHashMap<>();
     private final Map<UUID, Integer> pageAmounts = new ConcurrentHashMap<>();
     private ClickAction outsideAction = click -> ClickAction.Result.COMPLETE;
-    private CloseAction closeAction = close -> true;
+    private CloseAction closeAction = close -> CloseAction.Result.GO_BACK;
     private String clickSound = getDefaultClickSound();
     private boolean silent = false;
     
@@ -1296,7 +1298,7 @@ public class InventoryGui implements Listener {
                 }
 
                 // Cache the original cursor
-                ItemStack originalCursor = event.getCursor() != null ? event.getCursor().clone() : null;
+                ItemStack originalCursor = event.getCursor().isEmpty() ? null : event.getCursor().clone();
 
                 // Forward the click
                 GuiElement.Click click = handleInteract(event, event.getClick(), slot, event.getCursor());
@@ -1398,7 +1400,7 @@ public class InventoryGui implements Listener {
             if (event.getInventory().equals(inventory)) {
                 // go back. that checks if the player is in gui and has history
                 if (InventoryGui.this.equals(getOpen(event.getPlayer()))) {
-                    if (closeAction == null || closeAction.onClose(new Close(event.getPlayer(), InventoryGui.this, event))) {
+                    if (closeAction == null || closeAction.onClose(new Close(event.getPlayer(), InventoryGui.this, event)) == CloseAction.Result.GO_BACK) {
                         goBack(event.getPlayer());
                     } else {
                         clearHistory(event.getPlayer());
@@ -1478,66 +1480,19 @@ public class InventoryGui implements Listener {
             }
         }
     }
-    
+
     /**
      * Fake InventoryHolder for the GUIs
      */
-    public static class Holder implements InventoryHolder {
-        private InventoryGui gui;
-    
-        public Holder(InventoryGui gui) {
-            this.gui = gui;
-        }
-        
+    public record Holder(InventoryGui gui) implements InventoryHolder {
+
         @Override
-        public Inventory getInventory() {
+        public @NonNull Inventory getInventory() {
             return gui.getInventory();
-        }
-        
-        public InventoryGui getGui() {
-            return gui;
         }
     }
 
-    /**
-     * A functional interface for specifying how closing the inventory should be treated
-     * by implementing the {@link #onClose(Close)} method.
-     * The method should return whether the close should go back or not.
-     */
-    public static interface CloseAction {
-        
-        /**
-         * Executed when a player closes a GUI inventory
-         * @param close The close object holding information about this close
-         * @return Whether or not the close should go back or not
-         */
-        boolean onClose(Close close);
-        
-    }
-    
-    public static class Close {
-        private final HumanEntity player;
-        private final InventoryGui gui;
-        private final InventoryCloseEvent event;
-    
-        public Close(HumanEntity player, InventoryGui gui, InventoryCloseEvent event) {
-            this.player = player;
-            this.gui = gui;
-            this.event = event;
-        }
-    
-        public HumanEntity getPlayer() {
-            return player;
-        }
-    
-        public InventoryGui getGui() {
-            return gui;
-        }
-    
-        public InventoryCloseEvent getEvent() {
-            return event;
-        }
-    }
+    public record Close(HumanEntity player, InventoryGui gui, InventoryCloseEvent event) {}
 
     /**
      * Set the text of an item using the display name and the lore.

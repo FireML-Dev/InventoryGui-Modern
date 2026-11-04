@@ -1,5 +1,6 @@
 package de.themoep.inventorygui;
 
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
@@ -28,8 +29,7 @@ public class GuiView {
     private static final MethodHandle GET_SLOT_TYPE = unreflect("getSlotType");
     private static final MethodHandle CLOSE = unreflect("close");
     private static final MethodHandle COUNT_SLOTS = unreflect("countSlots");
-    private static final MethodHandle SET_PROPERTY = unreflect("setProperty");
-    private static final MethodHandle GET_TITLE = unreflect("getTitle");
+    private static final MethodHandle TITLE = unreflect("title");
 
     private static final WeakHashMap<InventoryView, GuiView> VIEWS = new WeakHashMap<>();
 
@@ -113,8 +113,8 @@ public class GuiView {
         return invoke(COUNT_SLOTS);
     }
 
-    public String getTitle() {
-        return invoke(GET_TITLE);
+    public Component getTitle() {
+        return invoke(TITLE);
     }
 
     @SuppressWarnings("unchecked")

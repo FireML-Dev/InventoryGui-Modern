@@ -5,6 +5,7 @@ import de.themoep.inventorygui.GuiPageElement;
 import de.themoep.inventorygui.InventoryGui;
 import de.themoep.inventorygui.StaticGuiElement;
 import de.themoep.inventorygui.actions.ClickAction;
+import de.themoep.inventorygui.actions.CloseAction;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -31,7 +32,7 @@ public abstract class ConfigGui<T> {
     protected final Player player;
     protected final Map<String, Supplier<Component>> replacements = new HashMap<>();
 
-    private InventoryGui.@Nullable CloseAction closeAction = null;
+    private @Nullable CloseAction closeAction = null;
 
     public ConfigGui(HumanEntity human, Plugin plugin, ConfigSupplier<T> configSupplier) {
         if (!(human instanceof Player p)) {
@@ -57,7 +58,7 @@ public abstract class ConfigGui<T> {
         replacements.forEach(this::addReplacement);
     }
 
-    public void setCloseAction(InventoryGui.CloseAction closeAction) {
+    public void setCloseAction(CloseAction closeAction) {
         this.closeAction = closeAction;
     }
 
