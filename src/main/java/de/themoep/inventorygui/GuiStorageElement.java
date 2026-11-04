@@ -257,6 +257,7 @@ public class GuiStorageElement extends GuiElement {
                     return ClickAction.Result.CANCEL_EVENT;
             }
             if (setStorageItem(click.getWhoClicked(), click.getSlot(), movedItem)) {
+                gui.draw(click.getWhoClicked());
                 return ClickAction.Result.COMPLETE;
             } else {
                 return ClickAction.Result.CANCEL_EVENT;

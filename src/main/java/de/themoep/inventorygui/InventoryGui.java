@@ -1176,14 +1176,14 @@ public class InventoryGui implements Listener {
             } else if (slot == -999) {
                 action = outsideAction;
             } else {
-                if (event instanceof InventoryClickEvent) {
+                if (event instanceof InventoryClickEvent clickEvent) {
                     // Click was neither for the top inventory nor outside
                     // E.g. click is in the bottom inventory
-                    if (((InventoryClickEvent) event).getAction() == InventoryAction.COLLECT_TO_CURSOR) {
+                    if (clickEvent.getAction() == InventoryAction.COLLECT_TO_CURSOR) {
                         GuiElement.Click click = new GuiElement.Click(this, slot, clickType, cursor, null, event);
                         simulateCollectToCursor(click);
                         return click;
-                    } else if (((InventoryClickEvent) event).getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
+                    } else if (clickEvent.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
                         // This was an action we can't handle, abort
                         event.setCancelled(true);
                     }

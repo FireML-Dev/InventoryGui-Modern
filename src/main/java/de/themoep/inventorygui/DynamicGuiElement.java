@@ -40,7 +40,7 @@ import java.util.function.Supplier;
 public class DynamicGuiElement extends GuiElement {
     private Function<HumanEntity, GuiElement> query;
 
-    private Map<UUID, CacheEntry> cachedElements = new ConcurrentHashMap<>();
+    private final Map<UUID, CacheEntry> cachedElements = new ConcurrentHashMap<>();
 
     /**
      * Represents an element in a gui that will query all it's data when drawn.

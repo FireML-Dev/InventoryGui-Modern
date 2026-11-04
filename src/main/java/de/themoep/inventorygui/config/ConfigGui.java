@@ -1,5 +1,6 @@
 package de.themoep.inventorygui.config;
 
+import de.themoep.inventorygui.DynamicGuiElement;
 import de.themoep.inventorygui.GuiElement;
 import de.themoep.inventorygui.GuiPageElement;
 import de.themoep.inventorygui.InventoryGui;
@@ -109,10 +110,6 @@ public abstract class ConfigGui<T> {
         if (itemSection == null) {
             return;
         }
-        ItemStack item = buildItem(itemSection.getConfig());
-        if (item.isEmpty()) {
-            return;
-        }
         String charString = section.getString("character");
         if (charString == null || charString.isBlank()) {
             return;
@@ -121,16 +118,18 @@ public abstract class ConfigGui<T> {
         // Check if this is a page button.
         GuiPageElement.PageAction pageAction = getPageAction(section.getString("page-action"));
         if (pageAction != null) {
-            gui.addElement(fetchPageElement(character, item, section, pageAction));
+            gui.addElement(fetchPageElement(character, buildItem(itemSection.getConfig()), section, pageAction));
             return;
         }
 
         // This is a regular button/item.
-        StaticGuiElement actionElement = new StaticGuiElement(character, item, click -> {
-            executeClickAction(section, click);
-            executeClickCommands(section, click);
-            return ClickAction.Result.CANCEL_EVENT;
-        });
+        DynamicGuiElement actionElement = new DynamicGuiElement(character, player ->
+            new StaticGuiElement(character, buildItem(itemSection.getConfig()), click -> {
+                executeClickAction(section, click);
+                executeClickCommands(section, click);
+                return ClickAction.Result.CANCEL_EVENT;
+            })
+        );
         gui.addElement(actionElement);
     }
 
