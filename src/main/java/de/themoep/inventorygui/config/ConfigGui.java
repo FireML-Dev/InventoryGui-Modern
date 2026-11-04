@@ -125,7 +125,7 @@ public abstract class ConfigGui<T> {
         // This is a regular button/item.
         DynamicGuiElement actionElement = new DynamicGuiElement(character, player ->
             new StaticGuiElement(character, buildItem(itemSection.getConfig()), click -> {
-                executeClickAction(section, click);
+                executeClickAction(section, gui, click);
                 executeClickCommands(section, click);
                 return ClickAction.Result.CANCEL_EVENT;
             })
@@ -142,13 +142,13 @@ public abstract class ConfigGui<T> {
         return new GuiPageElement(character, item, fallback, pageAction);
     }
 
-    private void executeClickAction(ConfigSupplier<T> section, GuiElement.Click click) {
+    private void executeClickAction(ConfigSupplier<T> section, InventoryGui gui, GuiElement.Click click) {
         ConfigSupplier<T> actionSection = section.getSection("click-action");
         // If not a section, fall back to a string.
         if (actionSection == null) {
             ConfigGuiClickAction action = getAction(section.getString("click-action"));
             if (action != null) {
-                action.onClick(this, click);
+                action.onClick(this, gui, click);
             }
             return;
         }
@@ -161,7 +161,7 @@ public abstract class ConfigGui<T> {
             default -> null;
         };
         if (action != null) {
-            action.onClick(this, click);
+            action.onClick(this, gui, click);
         }
     }
 
@@ -207,7 +207,7 @@ public abstract class ConfigGui<T> {
 
     public interface ConfigGuiClickAction {
 
-        ClickAction.Result onClick(ConfigGui<?> gui, GuiElement.Click click);
+        ClickAction.Result onClick(ConfigGui<?> configGui, InventoryGui gui, GuiElement.Click click);
 
     }
 

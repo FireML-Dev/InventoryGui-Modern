@@ -17,16 +17,16 @@ public class GlobalConfigActions {
     private static final Map<String, ConfigGui.ConfigGuiClickAction> ACTIONS = new ConcurrentHashMap<>();
 
     static {
-        ACTIONS.put("exit", (gui, click) -> {
+        ACTIONS.put("exit", (configGui, gui, click) -> {
             click.getWhoClicked().closeInventory();
             return ClickAction.Result.CANCEL_EVENT;
         });
 
         // Add page actions because these are handled separately.
-        ACTIONS.put("first-page", (gui, click) -> ClickAction.Result.CANCEL_EVENT);
-        ACTIONS.put("previous-page", (gui, click) -> ClickAction.Result.CANCEL_EVENT);
-        ACTIONS.put("next-page", (gui, click) -> ClickAction.Result.CANCEL_EVENT);
-        ACTIONS.put("last-page", (gui, click) -> ClickAction.Result.CANCEL_EVENT);
+        ACTIONS.put("first-page", (configGui, gui, click) -> ClickAction.Result.CANCEL_EVENT);
+        ACTIONS.put("previous-page", (configGui, gui, click) -> ClickAction.Result.CANCEL_EVENT);
+        ACTIONS.put("next-page", (configGui, gui, click) -> ClickAction.Result.CANCEL_EVENT);
+        ACTIONS.put("last-page", (configGui, gui, click) -> ClickAction.Result.CANCEL_EVENT);
     }
 
     public static boolean register(String id, ConfigGui.ConfigGuiClickAction action, boolean force) {
