@@ -23,6 +23,21 @@ version = project.property("project-version") as String
 java.sourceCompatibility = JavaVersion.VERSION_21
 
 publishing {
+    repositories {
+        maven {
+            url = uri("https://repo.codemc.io/repository/FireML/")
+
+            val mavenUsername = System.getenv("JENKINS_USERNAME")
+            val mavenPassword = System.getenv("JENKINS_PASSWORD")
+
+            if (mavenUsername != null && mavenPassword != null) {
+                credentials {
+                    username = mavenUsername
+                    password = mavenPassword
+                }
+            }
+        }
+    }
     publications {
         create<MavenPublication>("maven") {
             groupId = project.group.toString()
