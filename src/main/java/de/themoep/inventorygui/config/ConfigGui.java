@@ -12,6 +12,7 @@ import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import org.checkerframework.checker.units.qual.C;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -68,7 +69,7 @@ public abstract class ConfigGui<T> {
             getLayout()
         );
         loadFiller(gui);
-        loadItems(gui);
+        loadItems(gui, configSupplier);
         gui.setCloseAction(closeAction);
         configureGui(gui);
 
@@ -93,9 +94,12 @@ public abstract class ConfigGui<T> {
         gui.setFiller(item);
     }
 
-    private void loadItems(InventoryGui gui) {
-        configSupplier.getKeys(false).forEach(key -> {
-            ConfigSupplier<T> itemSection = configSupplier.getSection(key);
+    /**
+     * Allows items to be loaded from another config.
+     */
+    public void loadItems(InventoryGui gui, ConfigSupplier<T> supplier) {
+        supplier.getKeys(false).forEach(key -> {
+            ConfigSupplier<T> itemSection = supplier.getSection(key);
             if (itemSection == null) {
                 return;
             }
@@ -140,7 +144,7 @@ public abstract class ConfigGui<T> {
         return new GuiPageElement(character, item, fallback, pageAction);
     }
 
-    private void executeClickAction(ConfigSupplier<T> section, InventoryGui gui, GuiElement.Click click) {
+    public void executeClickAction(ConfigSupplier<T> section, InventoryGui gui, GuiElement.Click click) {
         ConfigSupplier<T> actionSection = section.getSection("click-action");
         // If not a section, fall back to a string.
         if (actionSection == null) {
