@@ -12,7 +12,6 @@ import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
-import org.checkerframework.checker.units.qual.C;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 

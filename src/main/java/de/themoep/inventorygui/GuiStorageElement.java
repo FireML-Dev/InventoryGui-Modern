@@ -268,7 +268,11 @@ public class GuiStorageElement extends GuiElement {
                     );
                     return true;
             }
-            return !setStorageItem(click.getWhoClicked(), click.getSlot(), movedItem);
+            if (setStorageItem(click.getWhoClicked(), click.getSlot(), movedItem)) {
+                gui.runTask(click.getWhoClicked(), () -> gui.draw(click.getWhoClicked()));
+                return false;
+            }
+            return true;
         });
         this.storage = storage;
     }
