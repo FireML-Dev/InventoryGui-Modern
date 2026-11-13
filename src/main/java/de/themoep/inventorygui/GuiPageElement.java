@@ -31,6 +31,7 @@ import org.bukkit.inventory.ItemStack;
  * <b>Untested und potentially unfinished.</b>
  */
 public class GuiPageElement extends StaticGuiElement {
+    private final ItemStack fallbackItem;
     private PageAction pageAction;
     private boolean silent = false;
 
@@ -38,6 +39,7 @@ public class GuiPageElement extends StaticGuiElement {
      * An element that allows for controlling the pagination of the gui.
      * @param slotChar      The character to replace in the gui setup string
      * @param item          The {@link ItemStack} representing this element
+     * @param fallbackItem  The {@link ItemStack} to show when the page action cannot be used
      * @param pageAction    What kind of page action you want to happen when interacting with the element.
      * @param text          The text to display on this element, placeholders are automatically
      *                      replaced, see {@link InventoryGui#replaceVars} for a list of the
@@ -45,8 +47,9 @@ public class GuiPageElement extends StaticGuiElement {
      *                      a single space if you want to add an empty line!<br>
      *                      If it's not set/empty the item's default name will be used
      */
-    public GuiPageElement(char slotChar, ItemStack item, PageAction pageAction, Component... text) {
+    public GuiPageElement(char slotChar, ItemStack item, ItemStack fallbackItem, PageAction pageAction, Component... text) {
         super(slotChar, item, text);
+        this.fallbackItem = fallbackItem;
         setAction(click -> {
             switch (pageAction) {
                 case NEXT:
@@ -84,6 +87,21 @@ public class GuiPageElement extends StaticGuiElement {
     }
 
     /**
+     * An element that allows for controlling the pagination of the gui.
+     * @param slotChar      The character to replace in the gui setup string
+     * @param item          The {@link ItemStack} representing this element
+     * @param pageAction    What kind of page action you want to happen when interacting with the element.
+     * @param text          The text to display on this element, placeholders are automatically
+     *                      replaced, see {@link InventoryGui#replaceVars} for a list of the
+     *                      placeholder variables. Empty text strings are also filter out, use
+     *                      a single space if you want to add an empty line!<br>
+     *                      If it's not set/empty the item's default name will be used
+     */
+    public GuiPageElement(char slotChar, ItemStack item, PageAction pageAction, Component... text) {
+        this(slotChar, item, null, pageAction, text);
+    }
+
+    /**
      * Get whether or not this element should make a sound when interacted with
      * @return  Whether or not to make a sound when interacted with
      */
@@ -104,7 +122,10 @@ public class GuiPageElement extends StaticGuiElement {
         if (((pageAction == PageAction.FIRST || pageAction == PageAction.LAST) && gui.getPageAmount(who) < 3)
                 || (pageAction == PageAction.NEXT && gui.getPageNumber(who) + 1 >= gui.getPageAmount(who))
                 || (pageAction == PageAction.PREVIOUS && gui.getPageNumber(who) == 0)) {
-            return gui.getFiller() != null ? gui.getFiller().getItem(who, slot) : null;
+            if (fallbackItem == null) {
+                return gui.getFiller() != null ? gui.getFiller().getItem(who, slot) : null;
+            }
+            return fallbackItem.clone();
         }
         if (pageAction == PageAction.PREVIOUS) {
             setNumber(gui.getPageNumber(who));
