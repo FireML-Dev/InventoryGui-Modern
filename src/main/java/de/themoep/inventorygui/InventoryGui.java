@@ -82,6 +82,8 @@ import java.util.regex.Pattern;
  */
 public class InventoryGui implements Listener {
 
+    public static boolean ENABLE_HISTORY = false;
+
     private final static int[] ROW_WIDTHS = {3, 5, 9};
     private final static InventoryType[] INVENTORY_TYPES = {
             InventoryType.DISPENSER, // 3*3
@@ -804,6 +806,9 @@ public class InventoryGui implements Listener {
      * @param gui       The GUI to add to the history
      */
     public static void addHistory(HumanEntity player, InventoryGui gui) {
+        if (!ENABLE_HISTORY) {
+            return;
+        }
         GUI_HISTORY.putIfAbsent(player.getUniqueId(), new ArrayDeque<>());
         Deque<InventoryGui> history = getHistory(player);
         if (history.peekLast() != gui) {
@@ -827,6 +832,9 @@ public class InventoryGui implements Listener {
      * @return          <code>true</code> if there was a gui to show; <code>false</code> if not
      */
     public static boolean goBack(HumanEntity player) {
+        if (!ENABLE_HISTORY) {
+            return false;
+        }
         Deque<InventoryGui> history = getHistory(player);
         history.pollLast();
         if (history.isEmpty()) {
