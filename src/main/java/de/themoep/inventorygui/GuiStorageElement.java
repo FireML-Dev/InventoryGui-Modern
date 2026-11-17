@@ -95,11 +95,6 @@ public class GuiStorageElement extends GuiElement {
      */
     public GuiStorageElement(char slotChar, Inventory storage, int invSlot, Runnable applyStorage, Function<ValidatorInfo, Boolean> placeValidator, Function<ValidatorInfo, Boolean> takeValidator) {
         super(slotChar, null);
-        if (Bukkit.getUnsafe().getDataVersion() < 4554 && !Boolean.getBoolean(STORAGE_SYSTEM_PROPERTY)) {
-            throw new UnsupportedOperationException("GuiStorageElements require server version 1.21.9 or later to work properly!"
-                    + " If you understand the risk and only want to use this element for internal use you can disable this check"
-                    + " by setting the system property " + STORAGE_SYSTEM_PROPERTY + "=true");
-        }
         this.invSlot = invSlot;
         this.applyStorage = applyStorage;
         this.placeValidator = placeValidator;
